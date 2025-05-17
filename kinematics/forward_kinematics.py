@@ -20,6 +20,7 @@
 import os
 import sys
 sys.path.append(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', 'joint_control'))
+import numpy as np
 
 from numpy.matlib import matrix, identity
 
@@ -36,13 +37,39 @@ class ForwardKinematicsAgent(PostureRecognitionAgent):
         self.transforms = {n: identity(4) for n in self.joint_names}
 
         # chains defines the name of chain and joints of the chain
-        self.chains = {'Head': ['HeadYaw', 'HeadPitch']
-                       # YOUR CODE HERE
-                       }
+        self.chains = {
+            'Head': ['HeadYaw', 'HeadPitch'],
+    
+            'LArm': ['LShoulderPitch', 'LShoulderRoll', 'LElbowYaw', 'LElbowRoll'],
+    
+            'RArm': ['RShoulderPitch', 'RShoulderRoll', 'RElbowYaw', 'RElbowRoll'],
+    
+            'LLeg': ['LHipYawPitch', 'LHipRoll', 'LHipPitch', 'LKneePitch', 'LAnklePitch', 'LAnkleRoll'],
+    
+            'RLeg': ['RHipYawPitch', 'RHipRoll', 'RHipPitch', 'RKneePitch', 'RAnklePitch', 'RAnkleRoll']
+        }
+
 
     def think(self, perception):
         self.forward_kinematics(perception.joint)
         return super(ForwardKinematicsAgent, self).think(perception)
+
+
+    def rotation(self,axis, angle):
+        c, s = np.cos(angle), np.sin(angle)
+        R = np.eye(4)
+        if axis == 'x':
+            R[1:3, 1:3] = [[c, -s], [s, c]]
+        elif axis == 'y':
+            R[0:3:2, 0:3:2] = [[c, s], [-s, c]]
+        elif axis == 'z':
+            R[0:2, 0:2] = [[c, -s], [s, c]]
+        return R
+
+    def trans(self,x=0, y=0, z=0):
+        T = np.eye(4)
+        T[:3, 3] = [x, y, z]
+        return T
 
     def local_trans(self, joint_name, joint_angle):
         '''calculate local transformation of one joint
@@ -54,6 +81,39 @@ class ForwardKinematicsAgent(PostureRecognitionAgent):
         '''
         T = identity(4)
         # YOUR CODE HERE
+        # Parent-to-child link translation vectors in meters
+        link_offsets = {
+            # Head
+            'HeadYaw':       [0.0, 0.0, 0.1265],       
+            'HeadPitch':     [0.0, 0.0, 0.0],         
+        
+            # Left Arm
+            'LShoulderPitch': [0.0, 0.098, 0.100],     
+            'LShoulderRoll':  [0.105, 0.015, 0.0],     
+            'LElbowYaw':      [0.0, 0.0, 0.0],         
+            'LElbowRoll':     [0.05595, 0.0, 0.0],     
+            'LWristYaw':      [0.0, 0.0, 0.0],         
+        
+            # Left Leg
+            'LHipYawPitch':   [0.0, 0.050, -0.085],   
+            'LHipRoll':       [0.0, 0.0, 0.0],         
+            'LHipPitch':      [0.0, 0.0, 0.0],        
+            'LKneePitch':     [0.0, 0.0, -0.100],     
+            'LAnklePitch':    [0.0, 0.0, -0.1029],     
+            'LAnkleRoll':     [0.0, 0.0, 0.0],         
+        }
+        trans_vec = link_offsets.get(joint_name, [0.0, 0.0, 0.0])
+        lname = joint_name.lower()
+        T = T @ self.trans(*trans_vec)
+        if 'yaw' in lname:
+            T = T @ self.rotation('z', joint_angle)
+        elif 'pitch' in lname:
+            T = T @ self.rotation('y', joint_angle)
+        elif 'roll' in lname:
+            T = T @ self.rotation('x', joint_angle)
+        else:
+        # No rotation or unknown joint type
+            pass
 
         return T
 
@@ -68,6 +128,7 @@ class ForwardKinematicsAgent(PostureRecognitionAgent):
                 angle = joints[joint]
                 Tl = self.local_trans(joint, angle)
                 # YOUR CODE HERE
+                T = Tl @ T
 
                 self.transforms[joint] = T
 
