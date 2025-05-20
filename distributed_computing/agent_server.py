@@ -12,6 +12,10 @@
 '''
 
 # add PYTHONPATH
+import xmlrpc.server
+import threading
+import xmlrpc
+from xmlrpc.server import SimpleXMLRPCServer
 import os
 import sys
 sys.path.append(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', 'kinematics'))
@@ -26,34 +30,47 @@ class ServerAgent(InverseKinematicsAgent):
     
     def get_angle(self, joint_name):
         '''get sensor value of given joint'''
+        return self.target_joints[joint_name]
         # YOUR CODE HERE
     
     def set_angle(self, joint_name, angle):
         '''set target angle of joint for PID controller
         '''
         # YOUR CODE HERE
+        self.target_joints[joint_name] = angle
 
     def get_posture(self):
         '''return current posture of robot'''
         # YOUR CODE HERE
+        return self.posture
 
     def execute_keyframes(self, keyframes):
         '''excute keyframes, note this function is blocking call,
         e.g. return until keyframes are executed
         '''
         # YOUR CODE HERE
+        self.keyframes = keyframes
 
     def get_transform(self, name):
         '''get transform with given name
         '''
         # YOUR CODE HERE
+        return self.transforms[name]
+       
 
     def set_transform(self, effector_name, transform):
         '''solve the inverse kinematics and control joints use the results
         '''
         # YOUR CODE HERE
+        self.set_transforms(effector_name,transform)
 
 if __name__ == '__main__':
+    server = SimpleXMLRPCServer(("localhost", 8000), allow_none=True)
+
     agent = ServerAgent()
+    server.register_introspection_functions()
+    server.register_instance(agent)
+    server_thread = threading.Thread(target=server.serve_forever, daemon=True)
+    server_thread.start()
     agent.run()
 
