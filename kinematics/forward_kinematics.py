@@ -100,7 +100,26 @@ class ForwardKinematicsAgent(PostureRecognitionAgent):
             'LHipPitch':      [0.0, 0.0, 0.0],        
             'LKneePitch':     [0.0, 0.0, -0.100],     
             'LAnklePitch':    [0.0, 0.0, -0.1029],     
-            'LAnkleRoll':     [0.0, 0.0, 0.0],         
+            'LAnkleRoll':     [0.0, 0.0, 0.0],
+
+             # Right Arm
+            'RShoulderPitch': [0.0, 0.098, 0.100],     
+            'RShoulderRoll':  [0.105, 0.015, 0.0],     
+            'RElbowYaw':      [0.0, 0.0, 0.0],         
+            'RElbowRoll':     [0.05595, 0.0, 0.0],     
+            'RWristYaw':      [0.0, 0.0, 0.0],         
+        
+            # Right Leg
+            'RHipYawPitch':   [0.0, 0.050, -0.085],   
+            'RHipRoll':       [0.0, 0.0, 0.0],         
+            'RHipPitch':      [0.0, 0.0, 0.0],        
+            'RKneePitch':     [0.0, 0.0, -0.100],     
+            'RAnklePitch':    [0.0, 0.0, -0.1029],     
+            'RAnkleRoll':     [0.0, 0.0, 0.0],
+
+
+
+            
         }
         trans_vec = link_offsets.get(joint_name, [0.0, 0.0, 0.0])
         lname = joint_name.lower()
@@ -128,7 +147,7 @@ class ForwardKinematicsAgent(PostureRecognitionAgent):
                 angle = joints[joint]
                 Tl = self.local_trans(joint, angle)
                 # YOUR CODE HERE
-                T = Tl @ T
+                T = T @ Tl
 
                 self.transforms[joint] = T
 

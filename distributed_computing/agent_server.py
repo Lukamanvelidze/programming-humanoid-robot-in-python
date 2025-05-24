@@ -18,6 +18,7 @@ import xmlrpc
 from xmlrpc.server import SimpleXMLRPCServer
 import os
 import sys
+import time
 sys.path.append(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', 'kinematics'))
 
 from inverse_kinematics import InverseKinematicsAgent
@@ -49,7 +50,16 @@ class ServerAgent(InverseKinematicsAgent):
         e.g. return until keyframes are executed
         '''
         # YOUR CODE HERE
-        self.keyframes = keyframes
+        self.keyframes = keyframes  # set once, triggering interpolation somewhere else
+        self.cycle_completed = False
+        while not self.cycle_completed:
+            print(self.cycle_completed)
+            
+        # Wait for cycle to complete, but allow other processes to run
+            time.sleep(0.05)  # 10ms sleep to yield CPU
+        
+
+
 
     def get_transform(self, name):
         '''get transform with given name

@@ -10,6 +10,7 @@ import weakref
 import threading
 import xmlrpc.client
 import numpy as np
+from keyframes import hello, rightBackToStand
 
 class PostHandler(object):
     '''the post hander wraps function to be excuted in paralle
@@ -81,8 +82,8 @@ if __name__ == '__main__':
     agent = ClientAgent()
     # TEST CODE HERE
     joint = 'LKneePitch'  # Replace with anything else if u want to test, this is veeeery simple and basic, but well it can check your code partially.
-    print("Initial angle:", agent.get_angle(joint))
-    agent.set_angle(joint, 2)
+    agent.execute_keyframes(hello())
+    agent.set_angle(joint, 0)
     print("New angle:", agent.get_angle(joint))
 
 
